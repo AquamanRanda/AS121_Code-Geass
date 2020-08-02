@@ -6,20 +6,31 @@
     <title>Face Recognition - Attendance</title>
 <style>
         body {
-            background-color:#E5E7E9;
+            background: #003973;  /* fallback for old browsers */
+            background: -webkit-linear-gradient(to right, #E5E5BE, #003973);  /* Chrome 10-25, Safari 5.1-6 */
+            background: linear-gradient(to right, #E5E5BE, #003973); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+            
             }
          .container {
             width: 200px;
             margin: auto;
             margin-top: 50px;
-
+            background: #0052D4;  /* fallback for old browsers */
+            background: -webkit-linear-gradient(to right, #6FB1FC, #4364F7, #0052D4);  /* Chrome 10-25, Safari 5.1-6 */
+            background: linear-gradient(to right, #6FB1FC, #4364F7, #0052D4); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
             height: auto;
             border: 3px solid #000000;
-            border-radius: 0.5em;
+            border-radius: 25px;
             padding: 100px;
             justify-content: "center";
             align-content: "center";
             }
+        .button {
+            background: skyblue;  /* fallback for old browsers */
+            height: 50px; 
+            width: 150px; 
+            margin-left:25px
+        }
 </style>
 </head>
 <body>
@@ -41,7 +52,7 @@
     <div>
         <form action="./start-attendance">
             <a href="{{ url_for('init_start_attendance') }}">
-                <button style="height: 50px; width: 100px; margin-left:50px">Start Attendance</button>
+                <button class="button">Start Attendance</button>
             </a>
         </form>
     </div>
@@ -49,7 +60,7 @@
     <div>
         <form action="./stop-attendance">
             <a href="{{ url_for('init_stop_attendance') }}">
-                <button style="height: 50px; width: 100px; margin-left:50px">Stop Attendance</button>
+                <button class="button">Stop Attendance</button>
             </a>
         </form>
     </div>
@@ -57,7 +68,7 @@
     <div>
         <form action="./edit-attendance">
             <a href="{{ url_for('init_edit_attendance') }}">
-                <button style="height: 50px; width: 100px; margin-left:50px">Edit Attendance</button>
+                <button class="button">Edit Attendance</button>
             </a>
         </form>
     </div>
@@ -65,7 +76,7 @@
     <div>
         <form action="./schedule-visit">
             <a href="{{ url_for('init_schedule_visit') }}">
-                <button style="height: 50px; width: 100px; margin-left:50px">Schedule Guardian visit</button>
+                <button class="button">Schedule Guardian visit</button>
             </a>
         </form>
     </div>
@@ -73,7 +84,7 @@
     <div>
         <form action="./scheduled-visits">
             <a href="{{ url_for('display_scheduled_visits') }}">
-                <button style="height: 50px; width: 100px; margin-left:50px">Upcoming Guardian visits</button>
+                <button class="button">Upcoming Guardian visits</button>
             </a>
         </form>
     </div>
