@@ -4,8 +4,9 @@ import json
 import requests
 import shutil
 import dateutil.parser
-
-
+import os
+from Crypto.Cipher import XOR
+import base64
 
 # API functions
 
@@ -14,8 +15,8 @@ class FetchAPIData:
 
     def __init__(self, cci_id):
         self.get_children_data(cci_id)
-        self.get_pix()
-        self.set_attendance_template()
+        # self.get_pix()
+        # self.set_attendance_template()
 
     def get_children_data(self, cci_id):
         __api_endpoint = '/attendance/children?cci=' + cci_id
@@ -50,7 +51,7 @@ class FetchAPIData:
 class Attendance:
 
     __base_api = 'https://asia-east2-eudaemon-20a5e.cloudfunctions.net/api'
-    __sent = True
+    __sent = False
     with open('./data/assets/cache/cci_secret.dat', 'rb') as f:
             __cci_id = f.read().decode('iso-8859-1') 
 
@@ -74,7 +75,7 @@ class Attendance:
     @staticmethod
     def assignAttendance(uids):
         records = pd.read_csv('./data/bin/attendance_template.csv')
-        
+        # print('here')
         records = records.drop(labels=['age', 'image'], axis=1)
         records = records.assign(attendance=["n"] * len(records["id"])) 
         records.loc[records['id'].isin(uids), 'attendance'] = ["y"] * len(records.loc[records['id'].isin(uids)]['attendance'])
@@ -83,20 +84,46 @@ class Attendance:
         attendance_json["attendance"] = json.loads(records[["attendance", "id", "name", "timestamp"]].to_json(orient='records'))
         attendance_json["cci"] = Attendance.__cci_id        
         attendance_json["date"] = datetime.datetime.now().replace(microsecond=0).isoformat()
-
+        filename = dateutil.parser.isoparse(attendance_json["date"]).date().strftime('%d-%m-%Y')
         result_json = json.dumps(attendance_json, indent=4,  sort_keys=True)
-        if not Attendance.__sent:
-            mode = 'a+'
-        else:
-            mode = 'w'
-        with open(r'./data/attendance.json', mode=mode) as f:
-            f.write(result_json)
+
+        # print(attendance_json["attendance"][:]["id"])
+        if Attendance.__sent:
+                # print(Attendance.__sent)
+                fileList = [f for f in os.listdir('./data/attendance/') if f.endswith('.json')]
+                for f in fileList:
+                    os.remove(os.path.join('./data/attendance/', f))
+
+        try:
+            # print('here1')
+            with open('./data/attendance/' + filename + '.json') as f:
+                existing_json = json.loads(f.read())
+                for x in existing_json["attendance"]:
+                    if x["attendance"] == "n":
+                        existing_json["attendance"].remove(existing_json["attendance"][existing_json["attendance"].index(x)])
+                    for i in attendance_json["attendance"]:    
+                        if x["attendance"] == "y" and x["id"] == i["id"]:
+                            existing_json["attendance"].remove(existing_json["attendance"][existing_json["attendance"].index(x)])
+                existing_json["attendance"].extend(attendance_json["attendance"])
+                existing_json = json.dumps(existing_json, indent=4, sort_keys=True)
+            
+            with open('./data/attendance/' + filename + '.json', 'w') as f:
+                f.write(existing_json)
         
-        if Attendance.check_internet_connection():
-            Attendance.postAttendance()
-            Attendance.__sent = True
-        else:
-            Attendance.__sent = False
+        except FileNotFoundError:
+            # print('here2')
+            with open('./data/attendance/' + filename + '.json', 'w') as f:
+                # print(result_json)
+                f.write(result_json)
+
+        finally:
+            # print('finally')
+            if Attendance.check_internet_connection():
+                # print('here3')
+                Attendance.postAttendance()
+                Attendance.__sent = True
+            else:
+                Attendance.__sent = False
 
     
     @staticmethod 
@@ -135,11 +162,13 @@ class Attendance:
         df = pd.merge(df, df1, on='childId')
         student_dict = df.to_dict()
 
+        # print(student_dict)
+
         for i in range(len(student_dict['date'])):
-            student_dict['date'] = dateutil.parser.isoparse(student_dict['date'][i]).strftime('%d-%m-%Y')
-            student_dict['startTime'] = dateutil.parser.isoparse(student_dict['startTime'][i]).strftime('%H:%M')
-            student_dict['stopTime'] = dateutil.parser.isoparse(student_dict['stopTime'][i]).strftime('%H:%M')
-            print(student_dict['date'], student_dict['startTime'], student_dict['stopTime'])
+            student_dict['date'][i] = dateutil.parser.isoparse(student_dict['date'][i]).strftime('%d-%m-%Y')
+            student_dict['startTime'][i] = dateutil.parser.isoparse(student_dict['startTime'][i]).strftime('%H:%M')
+            student_dict['stopTime'][i] = dateutil.parser.isoparse(student_dict['stopTime'][i]).strftime('%H:%M')
+            # print(student_dict['date'], student_dict['startTime'], student_dict['stopTime'])
         # df = df.assign(name=df1.loc[df1['id'] == df['childId'], 'name'])
         
         return student_dict
@@ -155,10 +184,13 @@ class Attendance:
 
     @staticmethod
     def postAttendance():
-        with open(r'./data/attendance.json') as f:
-            myObj = json.loads(f.read())
-            response = requests.post(Attendance.__base_api + '/attendance/children', json=myObj)
-        print(response.json() , response.status_code)
+        # print('postAttendance')
+        fileList = [f for f in os.listdir('./data/attendance/') if f.endswith('.json')]
+        for f in fileList:
+            with open(os.path.join('./data/attendance/', f)) as fi:
+                myObj = json.loads(fi.read())
+                response = requests.post(Attendance.__base_api + '/attendance/children', json=myObj)
+            print(response.json() , response.status_code)
     
     @staticmethod
     def postVisitScheduled():
@@ -169,3 +201,10 @@ class Attendance:
         print(response.json(), response.status_code)
         
 
+def encrypt(key, plaintext):
+    cipher = XOR.new(key)
+    return base64.b64encode(cipher.encrypt(plaintext))
+
+def decrypt(key, ciphertext):
+    cipher = XOR.new(key)
+    return base64.b64decode(cipher.decrypt(ciphertext))

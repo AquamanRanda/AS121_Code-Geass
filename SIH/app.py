@@ -1,8 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash
 import os
-
 from data.lib.programUtils import Attendance, FetchAPIData
-# load_records, assignAttendance, displayPresent, visitJson, postAttendance
 from facerecognition import FaceRecognition
 
 app = Flask(__name__)

@@ -48,6 +48,11 @@ td img{
 
 <body>
     <div class="change-attr">
+        <div class="return-button">
+            <a href="{{ url_for('index') }}">
+                <img src="{{ url_for('static', filename='arrow_back.png') }} " alt="back">
+            </a>
+        </div>
         <table class="center">
             <tr>
                 <th>Checkbox</th>
