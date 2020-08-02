@@ -1,0 +1,30 @@
+{
+    "attendance": [
+        {
+            "attendance": "n",
+            "id": "1TFKCQR9ZdQCsEdem27T",
+            "name": "Suresh",
+            "timestamp": null
+        },
+        {
+            "attendance": "n",
+            "id": "K1fIzmae1e3Uvq3Z5ekC",
+            "name": "Ragav",
+            "timestamp": null
+        },
+        {
+            "attendance": "y",
+            "id": "Qh9bCfkC0qmc0lPHLJYH",
+            "name": "Rehan",
+            "timestamp": "2020-08-02T09:00:43"
+        },
+        {
+            "attendance": "n",
+            "id": "Qhc2XwZGuidGqfEsH7vo",
+            "name": "Shrijith",
+            "timestamp": null
+        }
+    ],
+    "cci": "chennai-cci1",
+    "date": "2020-08-02T09:00:43"
+}

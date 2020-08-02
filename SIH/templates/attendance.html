@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Attendance</title>
+</head>
+<style>
+body {
+     background-color:#E5E7E9;
+     }
+table,td,th {
+  border: 2px solid #000000;
+  text-align: center;
+}
+
+table {
+  border-collapse: collapse;
+  width: 90%;
+}
+
+th,td {
+  padding: 10px;
+}
+td img{
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 100px;
+    height: 100px;
+}
+.center {
+  margin-left: auto;
+  margin-right: auto;
+}
+</style>
+<body>
+    <div class="change-attr">
+        <table class="center">
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Age</th>
+            </tr>
+            <form action="{{ url_for('submit_attendance') }}">
+                {% for i in range(len) %}
+                <tr>
+                    <td>
+                        <img src="{{ url_for('static', filename='assets/' + student_record['id'][i] + '.jpg') }}" alt="">
+                    </td>
+                    <td>
+                        {{ student_record['name'][i] }}
+                    </td>
+                    <td>
+                        {{ student_record['age'][i] }}
+                    </td>
+                </tr>
+                {% endfor %}    
+            </form>
+        </table>
+    </div>
+</body>
+</html>
