@@ -3,6 +3,75 @@ const firebase = require('../firebaseConfig');
 
 const { validationResult } = require('express-validator');
 
+let newGetLogin = async (district) => {
+	try {
+		let result = {};
+		let pos = await db
+			.collection('po')
+			.where('district', '==', district)
+			.get();
+
+		let poData = pos.docs;
+		let POs = [];
+		for (const PO of poData) {
+			console.log(PO.data());
+			let data = PO.data();
+			data['id'] = PO.id;
+			POs.push(data);
+		}
+		result['PO'] = POs;
+
+		// CWC
+		let cwcs = await db
+			.collection('cwc')
+			.where('district', '==', district)
+			.get();
+		let cwcData = cwcs.docs;
+		let CWCs = [];
+		for (const cwc of cwcData) {
+			let data = cwc.data();
+			data['id'] = cwc.id;
+			console.log(cwc.data());
+			CWCs.push(data);
+		}
+		result['CWC'] = CWCs;
+
+		// DCPU
+		let dcpus = await db
+			.collection('dcpu')
+			.where('district', '==', district)
+			.get();
+		let dcpuData = dcpus.docs;
+		let DCPUs = [];
+		for (const dcpu of dcpuData) {
+			console.log(dcpu.data());
+			let data = dcpu.data();
+			data['id'] = dcpu.id;
+			DCPUs.push(data);
+		}
+		result['DCPU'] = DCPUs;
+
+		// CCI
+		let ccis = await db
+			.collection('cci')
+			.where('district', '==', district)
+			.get();
+		let cciData = ccis.docs;
+		let CCIs = [];
+		for (const cci of cciData) {
+			console.log(cci.data());
+			let data = cci.data();
+			data['id'] = cci.id;
+			CCIs.push(data);
+		}
+		result['CCI'] = CCIs;
+
+		return { ...result };
+	} catch (err) {
+		console.log(err);
+	}
+};
+
 exports.getLogin = async (req, res) => {
 	try {
 		let result = {};
@@ -117,16 +186,20 @@ exports.postSignup = async (req, res) => {
 			email: req.body.email,
 			role: req.body.role,
 			organisation: req.body.organisation,
+			district: req.body.district,
 		};
 
 		let data = await firebase
 			.auth()
 			.createUserWithEmailAndPassword(newUser.email, req.body.password);
 
+		console.log('created user');
 		await admin.auth().setCustomUserClaims(data.user.uid, {
 			role: newUser.role,
 			organisation: newUser.organisation,
+			district: newUser.district,
 		});
+		console.log('set claims');
 
 		// TRYING CUSTOM TOKEN
 		// const newToken = await admin.auth().createCustomToken(data.user.uid, {
@@ -136,13 +209,15 @@ exports.postSignup = async (req, res) => {
 
 		newUser['createdAt'] = new Date().toISOString();
 		newUser['uid'] = data.user.uid;
-		await db.doc(`users/${newUser['uid']}`).set(newUser);
+		await db.doc(`users/${newUser.email}`).set(newUser);
+		console.log('set user');
 
 		// let token = await data.user.getIdToken();
 
 		let data1 = await firebase
 			.auth()
 			.signInWithEmailAndPassword(newUser.email, req.body.password);
+		console.log('signed in and token');
 
 		return res.status(201).json({
 			message: `user ${data.user.uid} created`,
@@ -161,6 +236,7 @@ exports.postLogin = async (req, res) => {
 	}
 
 	let role = req.body.role;
+	let district = req.body.district;
 
 	let availableRoles = ['CCI', 'CWC', 'DCPU', 'PO', 'ADMIN'];
 
@@ -207,13 +283,13 @@ exports.postLogin = async (req, res) => {
 			.signInWithEmailAndPassword(user.email, user.password);
 		console.log(data.user.uid);
 		// have to check if the roles are same
-		let doc = await db.doc(`users/${data.user.uid}`).get();
+		let doc = await db.doc(`users/${data.user.email}`).get();
 		if (!doc.exists) {
 			return res.status(400).json({ error: 'error occurred' });
 		}
 
 		console.log(doc.data());
-		collection = doc.data();
+		let collection = doc.data();
 
 		if (
 			collection.role === role &&
@@ -234,6 +310,41 @@ exports.postLogin = async (req, res) => {
 				.json({ error: 'invalid/wrong role or organisation' });
 		}
 	} catch (err) {
+		return res.status(400).json({ error: err.message });
+	}
+};
+
+exports.newnewGetlogin = async (req, res) => {
+	// let availableRoles = ['CCI', 'CWC', 'DCPU', 'PO'];
+
+	// if (!availableRoles.includes(req.body.role)) {
+	// 	return res.status(400).json({ error: 'invalid role' });
+	// }
+
+	try {
+		const user = {
+			email: req.body.email,
+		};
+		// let data = await firebase
+		// 	.auth()
+		// 	.signInWithEmailAndPassword(user.email, user.password);
+
+		// let doc = await db.doc(`users/${data.user.uid}`).get();
+		let dataDocs = await db
+			.collection('users')
+			.where('email', '==', user.email)
+			.limit(1)
+			.get();
+		let dataDoc = dataDocs.docs[0];
+		let data = dataDoc.data();
+		let district = data.district;
+
+		let result = await newGetLogin(district);
+		return res.status(200).json({ result });
+		// we have the district
+		// so do a lookup and return the data
+	} catch (err) {
+		console.log(err);
 		return res.status(400).json({ error: err.message });
 	}
 };

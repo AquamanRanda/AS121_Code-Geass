@@ -40,10 +40,13 @@ export class EditPane extends Component {
 			len = 0;
 		}
 		return (
-			<div>
+            <div className="pt-4 pb-4">
+			<div className="border-2 border-black bg-gray-400">
 				{this.state.keys.map((el, id) => {
 					return (
-						<div style={{ display: 'flex' }}>
+						<div
+							className=''
+							style={{ display: 'flex' }}>
 							<EditLabel
 								onChange={
 									id >= len
@@ -81,6 +84,7 @@ export class EditPane extends Component {
 					);
 				})}
 			</div>
+            </div> 
 		);
 	};
 
@@ -96,12 +100,15 @@ export class EditPane extends Component {
 
 	render() {
 		return (
-			<div>
+			<div className='text-center'>
 				{this.state.keys && this.state.values && this.displayData()}
-				<button onClick={this.onAddAnotherHandler}>
+				<button
+					className='text-white font-bold px-6 py-4 rounded outline-none focus:outline-none mr-1 mb-1 bg-gray-800 active:bg-gray-700 uppercase text-sm shadow hover:shadow-lg'
+					onClick={this.onAddAnotherHandler}>
 					Add another value
 				</button>
 				<button
+					className='text-white font-bold px-6 py-4 rounded outline-none focus:outline-none mr-1 mb-1 bg-gray-800 active:bg-gray-700 uppercase text-sm shadow hover:shadow-lg'
 					onClick={this.props.onSubmitHandler.bind(
 						this,
 						this.state.keys,
@@ -111,6 +118,7 @@ export class EditPane extends Component {
 				</button>
 				{this.props.onCreateGuardianHandler && (
 					<button
+						className='text-white font-bold px-6 py-4 rounded outline-none focus:outline-none mr-1 mb-1 bg-gray-800 active:bg-gray-700 uppercase text-sm shadow hover:shadow-lg'
 						onClick={this.props.onCreateGuardianHandler.bind(
 							this,
 							this.state.keys,

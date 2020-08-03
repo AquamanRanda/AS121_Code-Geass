@@ -36,6 +36,8 @@ export class CreateCCI extends Component {
 				<h1>Create a CCI </h1>
 				<div>
 					<EditPane
+                        defaults={true}
+						defaultValues={['name', 'age', 'dob']}
 						onCreateGuardianHandler={this.onCreateGuardianHandler}
 						onSubmitHandler={this.onSubmitHandler}
 						data={{}}

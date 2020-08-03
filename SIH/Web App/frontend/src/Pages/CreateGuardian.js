@@ -35,6 +35,8 @@ export class CreateGuardian extends Component {
 				<div>
 					<div>
 						<EditPane
+                            defaults={true}
+                            defaultValues={['Name' ,'']}
 							onSubmitHandler={this.onSubmitHandler}
 							data={{}}
 						/>

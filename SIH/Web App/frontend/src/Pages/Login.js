@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import axios from '../util/axiosinstance';
 import { Redirect } from 'react-router-dom';
 import Axios from 'axios';
+import '../styles/Login.css';
 
 export class Login extends Component {
 	state = {
@@ -12,6 +13,7 @@ export class Login extends Component {
 		password: '',
 		organisation: '',
 		role: 'DCPU',
+		hideButton: false,
 	};
 
 	componentDidMount = () => {
@@ -37,15 +39,13 @@ export class Login extends Component {
 
 	onDistrictLookUpHandler = async () => {
 		// search for the district
-		let { district } = this.state;
+		let { email } = this.state;
 		try {
 			this.setState({ loading: true });
-			let resp = await axios.get('/login', {
-				params: { district: district },
-			});
+			let resp = await axios.post('/getLogin', { email: email });
 			// console.log(resp);
 
-			let data = resp.data;
+			let data = resp.data.result;
 			console.log(data);
 			if (data['CWC'].length <= 0) {
 				this.setState({
@@ -55,6 +55,7 @@ export class Login extends Component {
 			} else {
 				console.log(data['DCPU']);
 				this.setState({
+					hideButton: true,
 					loading: false,
 					error: null,
 					data: data,
@@ -62,7 +63,7 @@ export class Login extends Component {
 				});
 			}
 		} catch (err) {
-			console.error(err);
+			console.error(err.response);
 			this.setState({ error: err.message });
 		}
 	};
@@ -132,79 +133,108 @@ export class Login extends Component {
 		}
 		return (
 			<div>
-				<h1>LOGIN PAGE</h1>
-				<label htmlFor='district'>Enter District :</label>
-
-				<input
-					id='district'
-					name='district'
-					onChange={this.onInputChangeHandler}
-					value={this.state.district}
-					type='text'
-				/>
-				<button onClick={this.onDistrictLookUpHandler}>Submit</button>
-				{this.state.error ? <p>{this.state.error}</p> : null}
-				{this.state.loading ? <p>Loading...</p> : null}
-				{/* role, organisation, email, password */}
-
-				{this.state.data && (
-					<form action=''>
-						<label htmlFor='email'>Email : </label>
+				<h1 className='center pt-2'>LOGIN PAGE</h1> <br />
+				<div>
+					<div className='center'>
+						<label htmlFor='district'>Enter Email :</label>
 						<input
-							id='email'
+							className='border-2 ml-2'
+							id='district'
 							name='email'
 							onChange={this.onInputChangeHandler}
-							type='email'
+							value={this.state.email}
+							type='text'
 						/>
-						<label htmlFor='email'>Password : </label>
-						<input
-							id='password'
-							name='password'
-							onChange={this.onInputChangeHandler}
-							type='password'
-						/>
-						<label htmlFor='role'>Select your role</label>
-						<select
-							value={this.state.role}
-							onChange={this.onSelectInputHandler}
-							name='role'
-							id='role'>
-							<option value='DCPU'>DCPU</option>
-							<option value='CCI'>CCI</option>
-							<option value='CWC'>CWC</option>
-							<option value='PO'>PO</option>
-						</select>
-						<label htmlFor='organisation'>
-							Choose the name of your Organisation
-						</label>
-						<select
-							value={this.state.organisation}
-							onChange={this.onInputChangeHandler}
-							name='organisation'
-							id='organisation'>
-							{this.state.data
-								? this.state.data[this.state.role].map((el) => {
-										if (this.state.role === 'PO') {
-											return (
-												<option value={el.id}>
-													{el.name}
-												</option>
-											);
-										}
-										return (
-											<option value={el.id}>
-												{el.id}
-											</option>
-										);
-								  })
-								: null}
-						</select>
-
+					</div>
+					<br />
+				</div>
+				<div className='center'>
+					{!this.state.hideButton && (
 						<button
-							onClick={this.onLoginSubmitHandler}
-							type='submit'>
-							submit
+							className='text-white font-bold px-6 py-4 rounded outline-none focus:outline-none mr-1 mb-2 bg-blue-500 active:bg-blue-600 uppercase text-sm shadow hover:shadow-lg'
+							onClick={this.onDistrictLookUpHandler}>
+							Submit
 						</button>
+					)}
+				</div>
+				{this.state.loading ? (
+					<p className='center'>Loading...</p>
+				) : null}
+				{/* role, organisation, email, password */}
+				{this.state.data && (
+					<form action=''>
+						<div className='center py-2'>
+							<label className='pr-4' htmlFor='email'>
+								Password :{' '}
+							</label>
+							<input
+								className='border-2 ml-2'
+								id='password'
+								name='password'
+								onChange={this.onInputChangeHandler}
+								type='password'
+							/>{' '}
+						</div>
+
+						<div className='center py-2'>
+							<label className='pr-4' htmlFor='role'>
+								Select your role
+							</label>
+							<select
+								className='border-2'
+								value={this.state.role}
+								onChange={this.onSelectInputHandler}
+								name='role'
+								id='role'>
+								<option value='DCPU'>DCPU</option>
+								<option value='CCI'>CCI</option>
+								<option value='CWC'>CWC</option>
+								<option value='PO'>PO</option>
+							</select>{' '}
+						</div>
+
+						<div className='center py-2'>
+							<label className='pr-4' htmlFor='organisation'>
+								Choose the name of your Organisation
+							</label>
+							<select
+								className='border-2'
+								value={this.state.organisation}
+								onChange={this.onInputChangeHandler}
+								name='organisation'
+								id='organisation'>
+								{this.state.data
+									? this.state.data[this.state.role].map(
+											(el) => {
+												if (this.state.role === 'PO') {
+													return (
+														<option value={el.id}>
+															{el.name}
+														</option>
+													);
+												}
+												return (
+													<option value={el.id}>
+														{el.id}
+													</option>
+												);
+											}
+									  )
+									: null}
+							</select>
+						</div>
+
+						<div className='center py-2'>
+							<button
+								className='text-white font-bold px-6 py-4 rounded outline-none focus:outline-none mr-1 mb-2 bg-blue-500 active:bg-blue-600 uppercase text-sm shadow hover:shadow-lg'
+								onClick={this.onLoginSubmitHandler}
+								type='submit'>
+								submit
+							</button>
+							{this.state.error ? (
+								<p className='center'>{this.state.error}</p>
+							) : null}
+						</div>
 					</form>
 				)}
 			</div>

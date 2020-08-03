@@ -1,19 +1,27 @@
 import React, { Component } from 'react';
 import './styles/app.css';
+import Footer from 'rc-footer';
+import 'rc-footer/assets/index.css';
 import {
 	BrowserRouter as Router,
 	Switch,
 	Route,
+	Link,
 	Redirect,
 } from 'react-router-dom';
+import Tilt from 'react-tilt';
 import Login from './Pages/Login';
 import JwtDecode from 'jwt-decode';
 // import axios from 'axios';
 import axios from './util/axiosinstance';
 
+import Message from './Pages/Message';
+
 import AuthRoute from './Components/AuthRoute';
 
 import DCPU from './Pages/DCPU';
+
+import Dictaphone from './Components/Dictaphone';
 
 import CWC from './Pages/CWC';
 
@@ -36,6 +44,8 @@ import EditCCI from './Pages/EditCCI';
 import CreateGuardian from './Pages/CreateGuardian';
 import Guardian from './Pages/Guardian';
 import EditGuardian from './Pages/EditGuardian';
+
+import Kiosk from  './Pages/Kiosk';
 
 export class App extends Component {
 	state = { authenticated: false, role: '', organisation: '', district: '' };
@@ -66,6 +76,13 @@ export class App extends Component {
 		}, time);
 	};
 
+	logout = () => {
+		localStorage.clear();
+		this.setState({
+			authenticated: false,
+		});
+	};
+
 	componentDidMount = () => {
 		let authenticated;
 		const token = localStorage.token;
@@ -84,7 +101,7 @@ export class App extends Component {
 					token: token,
 					role: decodedToken.role,
 					organisation: decodedToken.organisation,
-					district: localStorage.district,
+					district: decodedToken.district,
 				});
 				axios.defaults.headers['Authorization'] = token;
 			}
@@ -100,8 +117,80 @@ export class App extends Component {
 		// }
 
 		return (
-			<div>
-				<Router>
+			<Router>
+				<div className='mx-auto p-4'>
+					<header class='header lg:px-16 px-6 bg-white flex flex-wrap items-center lg:py-0 py-2'>
+						<div class='flex-1 flex justify-between items-center'>
+							<Link to='/'>
+								<Tilt
+									className='Tilt pt-2 shadow-sm border-sm'
+									options={{ max: 25 }}
+									style={{ height: 100, width: 150 }}>
+									<div className='Tilt-inner'>
+										{' '}
+										<img
+											width='100'
+											height='50'
+											src='https://cdn.discordapp.com/attachments/693464622631747706/739441746403917904/logo.png'
+											alt='Logo'
+										/>{' '}
+									</div>
+								</Tilt>
+							</Link>
+						</div>
+
+						<label
+							for='menu-toggle'
+							class='pointer-cursor lg:hidden block'>
+							<svg
+								class='fill-current text-gray-900'
+								xmlns='http://www.w3.org/2000/svg'
+								width='20'
+								height='20'
+								viewBox='0 0 20 20'>
+								<title>menu</title>
+								<path d='M0 3h20v2H0V3zm0 6h20v2H0V9zm0 6h20v2H0v-2z'></path>
+							</svg>
+						</label>
+						<input
+							class='hidden'
+							type='checkbox'
+							id='menu-toggle'
+						/>
+
+						<div
+							class='hidden lg:flex lg:items-center lg:w-auto w-full'
+							id='menu'>
+							<nav>
+								<ul class='lg:flex items-center justify-between text-base text-gray-700 pt-4 lg:pt-0'>
+									{this.state.authenticated && (
+										<React.Fragment>
+											<li
+												onClick={this.logout}
+												className='text-lg text-white lg:p-4 py-3 px-0 block border-b-2 border-transparent hover:border-indigo-400 '>
+												Logout
+											</li>
+											<li className='text-lg text-white lg:p-4 py-3 px-0 block border-b-2 border-transparent hover:border-indigo-400 '>
+												<Link to='/message'>
+													Message
+												</Link>
+											</li>
+                                            <li className='text-lg text-white lg:p-4 py-3 px-0 block border-b-2 border-transparent hover:border-indigo-400'>
+                                                    <Link to='/kiosk'>
+                                                        Feedback Kiosk
+                                                    </Link>
+                                            </li>
+                                            <li className="text-lg text-white lg:p-4 py-3 px-0 block border-b-2 border-transparent hover:border-indigo-400">
+                                                <Link to='/dictaphone'>
+                                                    Text-to-Speech
+                                                </Link>
+                                            </li>
+										</React.Fragment>
+									)}
+								</ul>
+							</nav>
+						</div>
+					</header>
 					<Switch>
 						<AuthRoute
 							path='/'
@@ -112,6 +201,26 @@ export class App extends Component {
 							exact
 							authenticated={this.state.authenticated}
 							component={Home}
+						/>
+                        <Route
+							path='/kiosk'
+							token={this.state.token}
+							role={this.state.role}
+							organisation={this.state.organisation}
+							district={this.state.district}
+							exact
+							authenticated={this.state.authenticated}
+							component={Kiosk}
+						/>
+                        <Route
+							path='/dictaphone'
+							token={this.state.token}
+							role={this.state.role}
+							organisation={this.state.organisation}
+							district={this.state.district}
+							exact
+							authenticated={this.state.authenticated}
+							component={Dictaphone}
 						/>
 						<Route
 							exact
@@ -243,9 +352,17 @@ export class App extends Component {
 							component={CWC}
 						/>{' '}
 						{/* cwc read */}
-					</Switch>
-				</Router>
-			</div>
+						<AuthRoute
+							path='/message'
+							exact
+							district={this.state.district}
+							organisation={this.state.organisation}
+							authenticated={this.state.authenticated}
+							component={Message}
+						/>{' '}
+					</Switch>{' '}
+				</div>
+			</Router>
 		);
 	}
 }

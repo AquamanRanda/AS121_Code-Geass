@@ -32,6 +32,8 @@ export class CreateEmployee extends Component {
 				</h1>
 				<div>
 					<EditPane
+                        defaults={true}
+						defaultValues={['name', 'age', 'dob','CCI' , 'Mobile Number','Gender', 'District','DCPU' , 'Address' ,'Salary', 'Languages known' , 'Religion']}
 						onCreateGuardianHandler={this.onCreateGuardianHandler}
 						onSubmitHandler={this.onSubmitHandler}
 						data={{}}

@@ -39,7 +39,7 @@ export class EditGuardian extends Component {
 	formatData = () => {
 		let x = [];
 		if (Object.keys(this.state.data).includes('photo')) {
-			x.push(<img src={this.state.data['photo']} />);
+			x.push(<img className="" src={this.state.data['photo']} />);
 		} else {
 			x.push(
 				<img
@@ -55,14 +55,14 @@ export class EditGuardian extends Component {
 				// it is a date
 				// format it
 				x.push(
-					<p>
-						{key} : {dayjs(value).fromNow()}
+					<p className="pb-4">
+					<strong>{key}</strong> : {dayjs(value).fromNow()}
 					</p>
 				);
 			} else {
 				x.push(
-					<p>
-						{key} : {value}
+					<p className="pb-4">
+						<strong>{key}</strong> : {value}
 					</p>
 				);
 			}
@@ -107,8 +107,8 @@ export class EditGuardian extends Component {
 	render() {
 		dayjs.extend(relativeTime);
 		return (
-			<div>
-				<div>
+			<div className="pt-10">
+				<div className="border-2 border-black">
 					{this.state.data && (
 						<EditPane
 							onSubmitHandler={this.onSubmitHandler}

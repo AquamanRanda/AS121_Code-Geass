@@ -12,8 +12,9 @@ export class EditLabel extends Component {
 	render() {
 		return (
 			<React.Fragment>
+                <div className="">
 				{this.state.edit ? (
-					<input
+					<div className="pb-4 px-10"><input className=""
 						autoFocus
 						onKeyDown={(event) => {
 							event.keyCode === 13 &&
@@ -25,16 +26,18 @@ export class EditLabel extends Component {
 						type='text'
 						onChange={this.props.onChange}
 						value={this.props.children}
-					/>
+					/></div>
 				) : (
-					<div
+					<div className="pb-4 px-5"
 						style={{ minWidth: '100px' }}
 						onClick={this.onClickHandler}>
 						{this.props.children}
 					</div>
 				)}
-			</React.Fragment>
+                </div>
+			</React.Fragment>    
 		);
+        
 	}
 }
 

@@ -20,6 +20,8 @@ const {
 	getLogin,
 	postSignup,
 	postLogin,
+	newGetLogin,
+	newnewGetlogin,
 } = require('./controllers/authentication');
 
 const { admin, db } = require('./firebaseadmin');
@@ -42,6 +44,11 @@ const {
 	uploadCCIFiles,
 	getChildrenInCCI,
 } = require('./controllers/cci');
+const {
+	postCCIRating,
+	postReview,
+	postTextToSpeech,
+} = require('./controllers/kiosk');
 const {
 	createEmployee,
 	editEmployee,
@@ -78,12 +85,16 @@ const { markNotificationsRead } = require('./controllers/notifications');
 const {
 	getChildrenData,
 	uploadAttendance,
+	postGuardianVisit,
+	getVisits,
 } = require('./controllers/attendance');
+
+const { sendMessage, getMessages } = require('./controllers/message');
 
 // MIDDLEWARES
 var isAuth = require('./middlewares/isAuth');
 var isNotCCI = require('./middlewares/isNotCCI');
-var isCorrectCCI = require('./middlewares/isCorrectCCI');
+// var isCorrectCCI = require('./middlewares/isCorrectCCI');
 var { isCorrectDCPU, isDCPU } = require('./middlewares/isDCPU');
 var isAdmin = require('./middlewares/isAdmin');
 
@@ -106,6 +117,7 @@ var isAdmin = require('./middlewares/isAdmin');
 }
  */
 app.get('/login', getLogin);
+app.post('/getLogin', newnewGetlogin);
 
 // signup route
 // TODO: Validation
@@ -159,7 +171,7 @@ app.post('/child/:id/upload/:type', [isAuth, isNotCCI], uploadFiles);
 // CCIs : CCI can only access child
 app.get('/child/notplaced', [isAuth], getNotPlacedChildren);
 
-app.get('/child/:id', [isAuth, isCorrectCCI], getChild);
+app.get('/child/:id', [isAuth], getChild);
 
 // Create a new CCI
 // only allowed to DCPUs in the same district
@@ -210,7 +222,7 @@ app.post(
 	createCCI
 );
 
-app.get('/cci/children', [isAuth, isCorrectCCI], getChildrenInCCI);
+app.get('/cci/children', [isAuth], getChildrenInCCI);
 
 // req.body = {
 //     district: String
@@ -408,6 +420,20 @@ app.get('/attendance/children', getChildrenData);
 
 app.post('/attendance/children', uploadAttendance);
 
+app.post('/message', [isAuth], sendMessage);
+
+app.get('/message', [isAuth], getMessages);
+
+app.get('/attendance/guardians', getVisits);
+
+app.post('/attendance/guardians', postGuardianVisit);
+
+app.post('/kiosk', postCCIRating);
+
+app.post('/kiosk/feedback', postReview);
+
+app.post('/kiosk/tts', postTextToSpeech);
+
 // exports.api = functions.https.onRequest(app);
 exports.api = functions.region('asia-east2').https.onRequest(app);
 
@@ -461,6 +487,8 @@ exports.createNotificationOnCCICreate = functions
 				sender: snapshot.id,
 				read: false,
 				type: 'CCICreation',
+				message: `A CCI has been created in your district. Please take a look`,
+				link: `/cci/${snapshot.id}`,
 			});
 		} catch (err) {
 			console.error(err);
@@ -475,35 +503,36 @@ exports.createNotificationOnChildAdded = functions
 		try {
 			let afterData = change.after.data();
 			let beforeData = change.before.data();
-			// check if child was added to their cci
-			if (!beforeData.cci && afterData.cci) {
-				// cci was added to the child. so notify the cci
-				let x = await db.collection('notification').add({
-					// create the notification
-					createdAt: new Date().toISOString(),
-					recipients: afterData.cci,
-					sender: change.after.id,
-					read: false,
-					type: 'ChildAddedToCCI',
-				});
-				return;
-			}
 
-			if (beforeData.cci !== afterData.cci) {
-				// cci was changed so notify the cci
-				let x = await db.collection('notification').add({
-					// create the notification
-					createdAt: new Date().toISOString(),
-					recipients: [afterData.cci],
-					sender: change.after.id,
-					read: false,
-					type: 'ChildAddedToCCI',
-				});
-				return;
-			}
+			var Analyzer = require('natural').SentimentAnalyzer;
+			var stemmer = require('natural').PorterStemmer;
+
+			performSentiment = async (data) => {
+				console.log('inside the sentiment analysis listener');
+				// perform sentiment analysis
+
+				var analyzer = new Analyzer('English', stemmer, 'afinn');
+				// // getSentiment expects an array of strings
+
+				// data = afterData.review;
+
+				// remove punctuations
+
+				data = data.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+
+				data = data.split(' ');
+
+				let sentimentValue = analyzer.getSentiment(data);
+				console.log('got the sentiment value');
+				console.log(`value is : ${sentimentValue}`);
+				return sentimentValue;
+
+				// let doc = await db
+				// 	.doc(`children/${change.after.id}`)
+				// 	.update({ sentiment: sentimentValue.toString() });
+			};
 
 			// if child data was updated
-
 			if (afterData.cci) {
 				let x = await db.collection('notification').add({
 					// create the notification
@@ -512,35 +541,76 @@ exports.createNotificationOnChildAdded = functions
 					sender: change.after.id,
 					read: false,
 					type: 'ChildDataUpdated',
+					message: `A child's information in your CCI has be updated. Please take a look`,
+					link: `/child/${change.after.id}`,
 				});
+			}
+
+			// check if child was added to their cci
+			// if (!beforeData.cci && afterData.cci) {
+			// 	// cci was added to the child. so notify the cci
+			// 	let x = await db.collection('notification').add({
+			// 		// create the notification
+			// 		createdAt: new Date().toISOString(),
+			// 		recipients: afterData.cci,
+			// 		sender: change.after.id,
+			// 		read: false,
+			// 		type: 'ChildAddedToCCI',
+			// 		message: `A Child has been added to your CCI. Please take a look`,
+			// 		link: `/child/${change.after.id}`,
+			// 	});
+			// 	return;
+			// }
+
+			if (
+				(!beforeData.cci && afterData.cci) ||
+				beforeData.cci !== afterData.cci
+			) {
+				// cci was changed so notify the cci
+				let x = await db.collection('notification').add({
+					// create the notification
+					createdAt: new Date().toISOString(),
+					recipients: [afterData.cci],
+					sender: change.after.id,
+					read: false,
+					type: 'ChildAddedToCCI',
+					message: `A Child has been added to your CCI. Please take a look`,
+					link: `/child/${change.after.id}`,
+				});
+				// performSentiment();
 				return;
 			}
 
+			// if (
+			// 	(!beforeData.review && afterData.review) ||
+			// 	beforeData.review !== afterData.review
+			// ) {
+			// 	performSentiment();
+			// }
+
+			// new sentiment analysis
+
 			if (
-				(!beforeData.review && afterData.review) ||
-				beforeData.review !== afterData.review
+				(!beforeData.reviews && afterData.reviews) ||
+				beforeData.reviews.length !== afterData.reviews.length
 			) {
-				console.log('inside the sentiment analysis listener');
 				// perform sentiment analysis
-				var Analyzer = require('natural').SentimentAnalyzer;
-				var stemmer = require('natural').PorterStemmer;
-				var analyzer = new Analyzer('English', stemmer, 'afinn');
-				// getSentiment expects an array of strings
+				console.log('secret secret');
 
-				let data = afterData.review;
-
-				// remove punctuations
-				data = data.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
-
-				data = data.split(' ');
-
-				let sentimentValue = analyzer.getSentiment(data);
-				console.log('got the sentiment value');
-				console.log(`value is : ${sentimentValue}`);
-				let doc = await db
-					.doc(`children/${change.after.id}`)
-					.update({ sentiment: sentimentValue });
-				return;
+				let sentiments = [],
+					total = 0;
+				for (let i = 0; i < afterData.reviews.length; i++) {
+					let review = afterData.reviews[i];
+					let sentiment = await performSentiment(review);
+					total += sentiment;
+					sentiments.push(sentiment.toString());
+				}
+				let sentiment = total / afterData.reviews.length;
+				sentiment.toFixed(2);
+				let doc = await db.doc(`children/${change.after.id}`).update({
+					sentiments: [...sentiments],
+					sentiment: sentiment.toFixed(2).toString(),
+				});
 			}
 		} catch (err) {
 			return;
@@ -590,6 +660,9 @@ exports.createNotificationOnDCPUCreated = functions
 			sender: snapshot.id,
 			read: false,
 			type: 'DCPUCreation',
+			message:
+				'A new DCPU has been established to your district. Please take a look',
+			link: `/dcpu/${change.after.id}`,
 		});
 	});
 
@@ -636,6 +709,9 @@ exports.createNotificationOnCWCCreated = functions
 			sender: snapshot.id,
 			read: false,
 			type: 'CWCCreation',
+			message:
+				'A new CWC has been established to your district. Please take a look',
+			link: `/cwc/${change.after.id}`,
 		});
 	});
 
@@ -682,6 +758,9 @@ exports.createNotificationOnPOCreated = functions
 			sender: snapshot.id,
 			read: false,
 			type: 'POCreation',
+			message:
+				'A new Probation officer has been appointed to your district. Please take a look',
+			link: `/po/${change.after.id}`,
 		});
 	});
 
@@ -698,8 +777,198 @@ exports.createNotificationOnCCIUpdated = functions
 			sender: change.after.id,
 			read: false,
 			type: 'CCIUpdated',
+			message: 'Your data has been updated. Please take a look',
+			link: `/cci/${change.after.id}`,
 		});
+
+		try {
+			let afterData = change.after.data();
+			let beforeData = change.before.data();
+
+			var Analyzer = require('natural').SentimentAnalyzer;
+			var stemmer = require('natural').PorterStemmer;
+
+			performSentiment = async (data) => {
+				console.log('inside the sentiment analysis listener');
+				// perform sentiment analysis
+
+				var analyzer = new Analyzer('English', stemmer, 'afinn');
+				// // getSentiment expects an array of strings
+
+				// data = afterData.review;
+
+				// remove punctuations
+
+				data = data.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g, '');
+
+				data = data.split(' ');
+
+				let sentimentValue = analyzer.getSentiment(data);
+				console.log('got the sentiment value');
+				console.log(`value is : ${sentimentValue}`);
+				return sentimentValue;
+
+				// let doc = await db
+				// 	.doc(`children/${change.after.id}`)
+				// 	.update({ sentiment: sentimentValue.toString() });
+			};
+
+			if (
+				(!beforeData.reviews && afterData.reviews) ||
+				beforeData.reviews.length !== afterData.reviews.length
+			) {
+				// perform sentiment analysis
+				console.log('secret secret');
+
+				let sentiments = [],
+					total = 0;
+				for (let i = 0; i < afterData.reviews.length; i++) {
+					let review = afterData.reviews[i];
+					let sentiment = await performSentiment(review);
+					total += sentiment;
+					sentiments.push(sentiment.toString());
+				}
+				let sentiment = total / afterData.reviews.length;
+
+				let doc = await db.doc(`cci/${change.after.id}`).update({
+					sentiment: sentiment.toFixed(2).toString(),
+					sentiments: [...sentiments],
+				});
+			}
+		} catch (err) {
+			return;
+		}
 	});
+
+exports.createNotificationOnMessageCreated = functions
+	.region('asia-east2')
+	.firestore.document('message/{id}')
+	.onCreate(async (snapshot, context) => {
+		// code
+		let data = snapshot.data();
+
+		let resp = await db.collection('notification').add({
+			createdAt: new Date().toISOString(),
+			recipients: [data.receiver],
+			sender: data.sender,
+			read: false,
+			type: 'MessageSent',
+			message: `${data.sender} just sent you a message. Please take a look`,
+			link: `/message`,
+		});
+		return;
+	});
+
+// firebase pubsub functions
+
+const twilio = require('twilio');
+const accountSid = functions.config().twilio.sid;
+const authToken = functions.config().twilio.token;
+
+// const client = new twilio(accountSid, authToken);
+
+const twilioNumber = '+12058507105';
+
+// exports.taskRunner = functions
+// 	.region('asia-east2')
+// 	.pubsub.schedule('* * * * *')
+// 	.onRun(async (context) => {
+// 		// this runs every 1 minute
+// 		const now = new Date().toISOString();
+// 		const query = db.collection('visits').where('startTime', '<=', now);
+// 		const tasks = await query.get();
+
+// 		const jobs = [];
+
+// 		// tasks.forEach(snapshot => {
+// 		// 	let { guardianId } = snapshot.data();
+// 		// 	let guardianDoc = await db.doc(`/guardian/${guardianId}`).get();
+
+// 		// })
+
+// 		makeCall = (number) => {
+// 			const textMessage = {
+// 				body: 'give appropriate content',
+// 				to: number,
+// 				from: twilioNumber,
+// 			};
+
+// 			return client.messages.create(textMessage);
+// 		};
+
+// 		tasks.forEach(async (snapshot) => {
+// 			let { guardianId } = snapshot.data();
+// 			let guardianDoc = await db.doc(`guardians/${guardianId}`).get();
+// 			if (guardianDoc.exists) {
+// 				let data = guardianDoc.data();
+// 				if (data.phoneNumber) {
+// 					let number = `+91${data.phoneNumber}`;
+// 					if (/^\+?[1-9]\d{1,14}$/.test(number)) {
+// 						// number is valid
+// 						// do the call
+// 						let job = makeCall(number);
+// 						jobs.push(job);
+// 					} else {
+// 						return;
+// 					}
+// 				}
+// 			}
+// 		});
+
+// 		return await Promise.all(jobs);
+// 	});
+
+// exports.guardianVisitsCronJob = functions
+// 	.region('asia-east2')
+// 	.pubsub.schedule('* * * * *')
+// 	.onRun(async (context) => {
+// 		// run this function to calculate whether the guardian is visiting or not
+// 		let now = new Date();
+// 		try {
+// 			let guardianDocs = await db.collection('guardians').get();
+
+// 			let dcpuDoc = await db.collection('dcpu').get();
+// 			let dcpus = dcpuDoc.docs;
+
+// 			// guardianDocs.forEach(el => el.)
+
+// 			for (const guardianDoc of guardianDocs) {
+// 				let guardianData = guardianDoc.data();
+
+// 				let lastVisited = guardianData['lastVisited'];
+// 				if (lastVisited) {
+// 					let dcpuIds = [];
+// 					for (const dcpu of dcpus) {
+// 						dcpuIds.push(dcpu.id);
+// 					}
+
+// 					const date1 = new Date(lastVisited);
+// 					const date2 = new Date();
+// 					const diffTime = Math.abs(date2 - date1);
+// 					const diffDays = Math.ceil(
+// 						diffTime / (1000 * 60 * 60 * 24)
+// 					);
+// 					// console.log(diffTime + ' milliseconds');
+// 					console.log(diffDays + ' days');
+// 					if (diffDays >= 60) {
+// 						// create notification
+// 						let resp = await db.collection('notification').add({
+// 							createdAt: new Date().toISOString(),
+// 							recipients: [...dcpuIds],
+// 							sender: guardianDoc.id,
+// 							read: false,
+// 							type: 'GuardianNotVisiting',
+// 							message: `A Guardian has not visited his ward for the past ${diffDays} days`,
+// 							link: `/guardian/${guardianDoc.id}`,
+// 						});
+// 					}
+// 				}
+// 			}
+// 		} catch (err) {
+// 			console.log(err);
+// 			return;
+// 		}
+// 	});
 
 // notifications for
 // CCI created - DCPU, CWC and PO in the district are notified
@@ -711,3 +980,53 @@ exports.createNotificationOnCCIUpdated = functions
 // all updates
 // all messages
 // all deletes
+
+exports.sendSMSOnVisitCreate = functions
+	.region('asia-east2')
+	.firestore.document('visits/{id}')
+	.onCreate(async (snapshot, context) => {
+		console.log('msg function');
+		let makeCall = (number, data, startTime) => {
+			console.log('inside helper function');
+			let d = new Date(startTime);
+			const textMessage = {
+				body: `Dear ${
+					data.name
+				}, your appointment to visit your ward has been scheduled on ${d.toLocaleString()}`,
+				to: number,
+				from: twilioNumber,
+			};
+
+			return client.messages.create(textMessage);
+		};
+
+		try {
+			let { guardianId, startTime } = snapshot.data();
+			let guardianDoc = await db.doc(`guardians/${guardianId}`).get();
+			console.log('get the guardiandoc function');
+
+			if (guardianDoc.exists) {
+				let data = guardianDoc.data();
+				if (data.phoneNumber) {
+					let number = `+91${data.phoneNumber}`;
+					if (/^\+?[1-9]\d{1,14}$/.test(number)) {
+						// number is valid
+						// do the call
+						console.log('inside if before calling');
+
+						let job = await makeCall(number, data, startTime);
+						console.log('after calling');
+
+						let x = await snapshot.ref.update({
+							status: 'SMS Sent',
+						});
+					} else {
+						return;
+					}
+				}
+			}
+		} catch (err) {
+			console.error(err);
+			return;
+		}
+	});
