@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import './styles/app.css';
+import './styles/home.css';
 import Footer from 'rc-footer';
+import { render } from 'react-dom';
 import 'rc-footer/assets/index.css';
 import {
 	BrowserRouter as Router,
@@ -119,7 +121,7 @@ export class App extends Component {
 		return (
 			<Router>
 				<div className='mx-auto p-4'>
-					<header class='header lg:px-16 px-6 bg-white flex flex-wrap items-center lg:py-0 py-2'>
+					<header class='header border-2 border-black border-solid lg:px-16 px-6 bg-white flex flex-wrap items-center lg:py-0 py-2'>
 						<div class='flex-1 flex justify-between items-center'>
 							<Link to='/'>
 								<Tilt
@@ -129,16 +131,18 @@ export class App extends Component {
 									<div className='Tilt-inner'>
 										{' '}
 										<img
-											width='100'
-											height='50'
-											src='https://cdn.discordapp.com/attachments/693464622631747706/739441746403917904/logo.png'
+											width='300'
+											height='150'
+											src='https://cdn.discordapp.com/attachments/658190768984293376/739762394284425257/dYZYIcfEmDAAAAAElFTkSuQmCC.png'
 											alt='Logo'
 										/>{' '}
 									</div>
+                                
 								</Tilt>
 							</Link>
 						</div>
-
+                        <div className="pt-2 text-center">
+                                <img width='90' height='40' src="https://media.discordapp.net/attachments/658190768984293376/739696284545449994/emblem.png" alt="logo" /></div>
 						<label
 							for='menu-toggle'
 							class='pointer-cursor lg:hidden block'>
@@ -157,6 +161,7 @@ export class App extends Component {
 							type='checkbox'
 							id='menu-toggle'
 						/>
+    
 
 						<div
 							class='hidden lg:flex lg:items-center lg:w-auto w-full'
@@ -182,7 +187,7 @@ export class App extends Component {
                                             </li>
                                             <li className="text-lg text-white lg:p-4 py-3 px-0 block border-b-2 border-transparent hover:border-indigo-400">
                                                 <Link to='/dictaphone'>
-                                                    Text-to-Speech
+                                                    Speech-to-text
                                                 </Link>
                                             </li>
 										</React.Fragment>
@@ -361,9 +366,30 @@ export class App extends Component {
 							component={Message}
 						/>{' '}
 					</Switch>{' '}
+                    <div className="pt-10">
+                    <Footer className="footer"
+    columns={[
+      {
+        title: 'Contact: 999999999',
+        url: '',
+        description: 'instragram',
+        openExternal: true,
+      },
+      {
+          title: 'Email: @gmail.com',
+      },
+      {
+          title: 'Address: 233/1 R R Munt India-600028'
+      }, {
+          className: "footer-image",
+          icon: (<img src="https://media.discordapp.net/attachments/658190768984293376/739757418896162896/left-logo.png" />),
+      }
+    ]}
+    bottom="Made with ❤️ by Code Geass"
+  /> </div>
 				</div>
 			</Router>
-		);
+        );
 	}
 }
 

@@ -132,11 +132,12 @@ export class Login extends Component {
 			return <Redirect to={'/'} />;
 		}
 		return (
-			<div>
-				<h1 className='center pt-2'>LOGIN PAGE</h1> <br />
+            <div>
+			<div className="container1 p-10 justify-center">
+				<strong><h1 className='center pt-2'>LOGIN PAGE</h1></strong> <br />
 				<div>
 					<div className='center'>
-						<label htmlFor='district'>Enter Email :</label>
+						<label htmlFor='district'>Email:</label>
 						<input
 							className='border-2 ml-2'
 							id='district'
@@ -238,6 +239,7 @@ export class Login extends Component {
 					</form>
 				)}
 			</div>
+            </div>
 		);
 	}
 }

@@ -18,7 +18,7 @@ exports.createChild = async (req, res) => {
 		// user is not CCI
 		childData['createdAt'] = new Date().toISOString();
 		childData['createdByUser'] = req.user.email;
-		childData['createdBy'] = req.user.user_id;
+		// childData['createdBy'] = req.user.user_id;
 		// create entry in db
 		let doc = await db.collection('children').add(childData);
 		// created successfully
@@ -43,7 +43,7 @@ exports.updateChild = async (req, res) => {
 			return res.status(403).json({ error: 'unauthorized user' });
 		}
 		childData['lastEditedByUser'] = req.user.email;
-		childData['lastEditedBy'] = req.user.user_id;
+		// childData['lastEditedBy'] = req.user.user_id;
 		childData['lastEditedAt'] = new Date().toISOString();
 
 		let doc = await db.doc(`children/${id}`).get();

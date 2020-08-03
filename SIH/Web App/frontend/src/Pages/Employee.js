@@ -79,29 +79,29 @@ export class Employee extends Component {
 				// it is a date
 				// format it
 				x.push(
-					<p>
-						{key} : {dayjs(value).fromNow()}
+					<p className="pt-4">
+						<strong>{key}</strong> : {dayjs(value).fromNow()}
 					</p>
 				);
 			} else if (this.isLink(value)) {
 				x.push(<a href={value}>{key}</a>);
 			} else {
 				x.push(
-					<p className='justify-center text-center my-3 border-black border rounded-md'>
-						{key} : {value}
+					<p className='pt-4'>
+						<strong>{key} </strong> : {value}
 					</p>
 				);
 			}
 		}
 
-		return <div className='flex flex-col justify-center '>{x}</div>;
+		return <div>{x}</div>;
 	};
 
 	render() {
 		dayjs.extend(relativeTime);
 
 		return (
-			<div className='text-center'>
+			<div className='border-2 border-black bg-blue-400 text-center'>
 				{this.state.data && this.formatData()}
 				<div>
 					{this.props.role === 'DCPU' && (

@@ -15,7 +15,7 @@ exports.createGuardian = async (req, res) => {
 	try {
 		let org = req.user.organisation;
 		guardianData['createdAt'] = new Date().toISOString();
-		guardianData['createdBy'] = req.user.user_id;
+		// guardianData['createdBy'] = req.user.user_id;
 		guardianData['createdByUser'] = req.user.email;
 
 		doc = await db.collection('guardians').add(guardianData);
@@ -27,7 +27,7 @@ exports.createGuardian = async (req, res) => {
 
 	let childData = {};
 	childData['lastEditedByUser'] = req.user.email;
-	childData['lastEditedBy'] = req.user.user_id;
+	// childData['lastEditedBy'] = req.user.user_id;
 	childData['lastEditedAt'] = new Date().toISOString();
 
 	try {
@@ -53,7 +53,7 @@ exports.updateGuardian = async (req, res) => {
 		return res.status(403).json({ error: 'unauthorized user' });
 	}
 	guardianData['lastEditedByUser'] = req.user.email;
-	guardianData['lastEditedBy'] = req.user.user_id;
+	// guardianData['lastEditedBy'] = req.user.user_id;
 	guardianData['lastEditedAt'] = new Date().toISOString();
 
 	try {

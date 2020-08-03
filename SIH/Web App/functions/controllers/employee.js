@@ -13,7 +13,7 @@ exports.createEmployee = async (req, res) => {
 		let org = req.user.organisation;
 		let empData = req.body;
 		empData['createdAt'] = new Date().toISOString();
-		empData['createdBy'] = req.user.user_id;
+		// empData['createdBy'] = req.user.user_id;
 		empData['createdByUser'] = req.user.email;
 		// we have req.dcpuData
 		let doc = await db.collection('employees').add(empData);
@@ -49,7 +49,7 @@ exports.editEmployee = async (req, res) => {
 		let id = req.params.id;
 		let empData = req.body;
 		empData['lastEditedAt'] = new Date().toISOString();
-		empData['lastEditedBy'] = req.user.user_id;
+		// empData['lastEditedBy'] = req.user.user_id;
 		empData['lastEditedByUser'] = req.user.email;
 		// id of the employee to update
 		let doc = await db.doc(`employees/${id}`).update(empData);
@@ -152,7 +152,7 @@ exports.uploadEmployeeFiles = async (req, res) => {
 			let writeResult = await db.doc(`employees/${id}`).update({
 				[type]: fileUrl,
 				[a]: req.user.email,
-				[y]: req.user.user_id,
+				// [y]: req.user.user_id,
 			});
 
 			return res.status(201).json({

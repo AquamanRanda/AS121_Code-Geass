@@ -48,3 +48,6 @@
     background-color: rgba(0, 0, 0, 0.14);
     cursor: pointer;
   }
+  #menu-toggle:checked + #menu {
+    display: block;
+  }

@@ -20,7 +20,20 @@ export class Home extends Component {
 		document.removeEventListener('mousedown', this.handleClickOutside);
 	}
 
-	onClickChildrenData = () => {};
+	onClickChildrenData = async () => {
+		try {
+			let resp = await Axios.get('/child/notplaced', {
+				params: { district: this.props.district },
+			});
+			this.setState({
+				childrenNotPlaced: resp.data,
+				showChildrenNotPlaced: true,
+			});
+			console.log(resp);
+		} catch (err) {
+			console.log(err.response);
+		}
+	};
 
 	componentDidMount = async () => {
 		try {
@@ -269,19 +282,19 @@ export class Home extends Component {
 						onClick={this.onClickChildrenData}>
 						Show Children who are not placed in any CCI yet
 					</button>
-					{this.state.showChildren && (
-						<div>
-							{this.state.childrenData.map((el) => {
-								return (
-									<div>
-										<Link to={`/child/${el.id}`}>
-											{el.name}
-										</Link>
-									</div>
-								);
-							})}
-						</div>
-					)}
+                    {this.state.showChildrenNotPlaced && (
+                        <div>
+                            {this.state.childrenNotPlaced.final.map((el) => {
+                                return (
+                                    <div>
+                                        <Link to={`/child/${el.id}`}>
+                                            {el.name}
+                                        </Link>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    )}
 				</div>
 			</div>
 		);

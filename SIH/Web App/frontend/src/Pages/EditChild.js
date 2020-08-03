@@ -79,7 +79,11 @@ export class EditChild extends Component {
 			let obj = {};
 
 			for (let id = 0; id < keys.length; id++) {
-				const el = keys[id];
+                const el = keys[id];
+                console.log(el);
+                if(el === 'previousInstitutions') {
+                    continue;
+                }
 				if (el.trim() === '' || values[id].trim() === '') {
 					continue;
 				}

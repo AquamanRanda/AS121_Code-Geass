@@ -566,6 +566,12 @@ exports.createNotificationOnChildAdded = functions
 				(!beforeData.cci && afterData.cci) ||
 				beforeData.cci !== afterData.cci
 			) {
+				let doc = await db.doc(`children/${change.after.id}`).update({
+					previousInstitutions: admin.firestore.FieldValue.arrayUnion(
+						beforeData.cci
+					),
+				});
+
 				// cci was changed so notify the cci
 				let x = await db.collection('notification').add({
 					// create the notification
@@ -603,7 +609,7 @@ exports.createNotificationOnChildAdded = functions
 					let review = afterData.reviews[i];
 					let sentiment = await performSentiment(review);
 					total += sentiment;
-					sentiments.push(sentiment.toString());
+					sentiments.push(sentiment.toFixed(2).toString());
 				}
 				let sentiment = total / afterData.reviews.length;
 				sentiment.toFixed(2);
@@ -826,7 +832,7 @@ exports.createNotificationOnCCIUpdated = functions
 					let review = afterData.reviews[i];
 					let sentiment = await performSentiment(review);
 					total += sentiment;
-					sentiments.push(sentiment.toString());
+					sentiments.push(sentiment.toFixed(2).toString());
 				}
 				let sentiment = total / afterData.reviews.length;
 
@@ -865,7 +871,7 @@ const twilio = require('twilio');
 const accountSid = functions.config().twilio.sid;
 const authToken = functions.config().twilio.token;
 
-// const client = new twilio(accountSid, authToken);
+const client = new twilio(accountSid, authToken);
 
 const twilioNumber = '+12058507105';
 
@@ -886,15 +892,15 @@ const twilioNumber = '+12058507105';
 
 // 		// })
 
-// 		makeCall = (number) => {
-// 			const textMessage = {
-// 				body: 'give appropriate content',
-// 				to: number,
-// 				from: twilioNumber,
-// 			};
+// 		// makeCall = (number) => {
+// 		// 	const textMessage = {
+// 		// 		body: 'give appropriate content',
+// 		// 		to: number,
+// 		// 		from: twilioNumber,
+// 		// 	};
 
-// 			return client.messages.create(textMessage);
-// 		};
+// 		// 	return client.messages.create(textMessage);
+// 		// };
 
 // 		tasks.forEach(async (snapshot) => {
 // 			let { guardianId } = snapshot.data();
@@ -918,57 +924,68 @@ const twilioNumber = '+12058507105';
 // 		return await Promise.all(jobs);
 // 	});
 
-// exports.guardianVisitsCronJob = functions
-// 	.region('asia-east2')
-// 	.pubsub.schedule('* * * * *')
-// 	.onRun(async (context) => {
-// 		// run this function to calculate whether the guardian is visiting or not
-// 		let now = new Date();
-// 		try {
-// 			let guardianDocs = await db.collection('guardians').get();
+// 0 0 * * 0 - every week
 
-// 			let dcpuDoc = await db.collection('dcpu').get();
-// 			let dcpus = dcpuDoc.docs;
+// lastVisitedUpdate
+exports.guardianVisitsCronJob = functions
+	.region('asia-east2')
+	.pubsub.schedule('* * * * *')
+	.onRun(async (context) => {
+		// run this function to calculate whether the guardian is visiting or not
+		let now = new Date();
+		console.log('inside the cron job');
+		try {
+			let guardianDocs = await db.collection('guardians').get();
 
-// 			// guardianDocs.forEach(el => el.)
+			let dcpuDoc = await db.collection('dcpu').get();
+			let dcpus = dcpuDoc.docs;
+			console.log('got dcpu data');
 
-// 			for (const guardianDoc of guardianDocs) {
-// 				let guardianData = guardianDoc.data();
+			// guardianDocs.forEach(el => el.)
 
-// 				let lastVisited = guardianData['lastVisited'];
-// 				if (lastVisited) {
-// 					let dcpuIds = [];
-// 					for (const dcpu of dcpus) {
-// 						dcpuIds.push(dcpu.id);
-// 					}
+			for (const guardianDoc of guardianDocs.docs) {
+				let guardianData = guardianDoc.data();
 
-// 					const date1 = new Date(lastVisited);
-// 					const date2 = new Date();
-// 					const diffTime = Math.abs(date2 - date1);
-// 					const diffDays = Math.ceil(
-// 						diffTime / (1000 * 60 * 60 * 24)
-// 					);
-// 					// console.log(diffTime + ' milliseconds');
-// 					console.log(diffDays + ' days');
-// 					if (diffDays >= 60) {
-// 						// create notification
-// 						let resp = await db.collection('notification').add({
-// 							createdAt: new Date().toISOString(),
-// 							recipients: [...dcpuIds],
-// 							sender: guardianDoc.id,
-// 							read: false,
-// 							type: 'GuardianNotVisiting',
-// 							message: `A Guardian has not visited his ward for the past ${diffDays} days`,
-// 							link: `/guardian/${guardianDoc.id}`,
-// 						});
-// 					}
-// 				}
-// 			}
-// 		} catch (err) {
-// 			console.log(err);
-// 			return;
-// 		}
-// 	});
+				console.log('im ehere');
+
+				let lastVisited = guardianData['lastVisited']; // should be an ISOString
+				if (lastVisited) {
+					let dcpuIds = [];
+					for (const dcpu of dcpus) {
+						dcpuIds.push(dcpu.id);
+					}
+					console.log('got dcpu ids array', dcpuIds);
+
+					const date1 = new Date(lastVisited);
+					const date2 = new Date();
+					const diffTime = Math.abs(date2 - date1);
+					const diffDays = Math.ceil(
+						diffTime / (1000 * 60 * 60 * 24)
+					);
+					// console.log(diffTime + ' milliseconds');
+					console.log(diffDays + ' days');
+					if (
+						// diffDays >= 60  => actual implementation
+						diffDays >= 1
+					) {
+						// create notification
+						let resp = await db.collection('notification').add({
+							createdAt: new Date().toISOString(),
+							recipients: [...dcpuIds],
+							sender: guardianDoc.id,
+							read: false,
+							type: 'GuardianNotVisiting',
+							message: `A Guardian has not visited his ward for the past ${diffDays} days. Please look into it`,
+							link: `/guardian/${guardianDoc.id}`,
+						});
+					}
+				}
+			}
+		} catch (err) {
+			console.log(err);
+			return;
+		}
+	});
 
 // notifications for
 // CCI created - DCPU, CWC and PO in the district are notified

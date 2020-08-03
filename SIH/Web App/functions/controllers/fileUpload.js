@@ -53,7 +53,7 @@ exports.uploadFiles = async (req, res) => {
 				let writeResult = await db.doc(`children/${id}`).update({
 					SIR: fileurl,
 					SIRUploadedByUser: req.user.email,
-					SIRUploadedBy: req.user.user_id,
+					// SIRUploadedBy: req.user.user_id,
 				});
 				return res.status(201).json({
 					message: `SIR uploaded at ${fileurl} successfully`,

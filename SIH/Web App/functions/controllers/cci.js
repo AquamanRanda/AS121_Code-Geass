@@ -45,7 +45,7 @@ exports.createCCI = async (req, res) => {
 
 			let dataToAdd = { ...req.body };
 			dataToAdd['createdAt'] = new Date().toISOString();
-			dataToAdd['createdBy'] = req.user.user_id;
+			// dataToAdd['createdBy'] = req.user.user_id;
 			dataToAdd['createdByUser'] = req.user.email;
 			let cwc = req.body.cwc;
 			let dcpu = req.body.dcpu;
@@ -122,7 +122,7 @@ exports.editCCI = async (req, res) => {
 		let id = req.params.id;
 		// id of the cci
 		let data = req.body;
-		data['lastEditedBy'] = req.user.user_id;
+		// data['lastEditedBy'] = req.user.user_id;
 		data['lastEditedByUser'] = req.user.email;
 		data['lastEditedAt'] = new Date().toISOString();
 
@@ -264,12 +264,11 @@ exports.uploadCCIFiles = async (req, res) => {
 			const fileurl = `https://firebasestorage.googleapis.com/v0/b/${fbconfig.storageBucket}/o/${fileName}?alt=media`;
 
 			let a = `${type}UploadedByUser`;
-			let y = `${type}UploadedBy`;
+			// let y = `${type}UploadedBy`;
 
 			let writeResult = await db.doc(`cci/${id}`).update({
 				[type]: fileUrl,
 				[a]: req.user.email,
-				[y]: req.user.user_id,
 			});
 
 			return res.status(201).json({

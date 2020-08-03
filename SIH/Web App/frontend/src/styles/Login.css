@@ -9,7 +9,19 @@
     padding-bottom: 20px;
 }
 
-.container {
+.container1 {
     width: auto;
+    margin: auto;
+    margin-top: 50px;
+    background: grey;  /* fallback for old browsers */
     height: auto;
-}
+    border: 3px solid #000000;
+    border-radius: 25px;
+    padding: 100px;
+    justify-content: "center";
+    align-content: "center";
+    background: #B993D6;  /* fallback for old browsers */
+background: -webkit-linear-gradient(to right, #8CA6DB, #B993D6);  /* Chrome 10-25, Safari 5.1-6 */
+background: linear-gradient(to right, #8CA6DB, #B993D6); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+
+    }
