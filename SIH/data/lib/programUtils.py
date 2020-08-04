@@ -104,6 +104,8 @@ class Attendance:
                     for i in attendance_json["attendance"]:    
                         if x["attendance"] == "y" and x["id"] == i["id"]:
                             existing_json["attendance"].remove(existing_json["attendance"][existing_json["attendance"].index(x)])
+                        if i["attendance"] == "n" and x["id"] == i["id"]:
+                            existing_json["attendance"].remove(existing_json["attendance"][existing_json["attendance"].index(x)])
                 existing_json["attendance"].extend(attendance_json["attendance"])
                 existing_json = json.dumps(existing_json, indent=4, sort_keys=True)
             
